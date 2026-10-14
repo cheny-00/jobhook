@@ -105,8 +105,8 @@ class Flow(JobhookTest):
         code, out = self.call("GET", "/ping", admin=False)
         self.assertEqual((code, out), (200, {"ok": True, "service": "jobhook", "api": 1, "version": jobhook.VERSION}))
 
-    def test_older_aca_remote_still_gets_in(self):
-        self.assertEqual(self.call("GET", "/hooks", header="X-Adm-Token")[0], 200)
+    def test_the_token_counts_only_in_its_own_header(self):
+        self.assertEqual(self.call("GET", "/hooks", header="X-Adm-Token")[0], 401)
         self.assertEqual(self.call("GET", "/hooks", header="X-Something-Else")[0], 401)
 
     def test_past_its_time_it_is_lost_once_and_can_still_finish(self):

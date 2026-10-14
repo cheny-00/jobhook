@@ -217,7 +217,7 @@ class Jobhook:
         return zh if self.zh else en
 
     def admin(self, given):
-        return bool(self.token) and any(hmac.compare_digest((g or "").encode(), self.token.encode()) for g in given)
+        return bool(self.token) and hmac.compare_digest((given or "").encode(), self.token.encode())
 
     def register(self, hid, meta):
         within = meta.get("within")
@@ -341,8 +341,7 @@ def handler(app):
             body = self.body() if method in ("PUT", "POST") else b""
             if body is None:
                 return 413, {"error": app.t("body too long", "正文太长")}
-            # X-Adm-Token: what aca.remote before 0.3.1 sends; goes once those are gone
-            admin = app.admin((self.headers.get("X-Jobhook-Token"), self.headers.get("X-Adm-Token")))
+            admin = app.admin(self.headers.get("X-Jobhook-Token"))
             denied = 401, {"error": app.t("wrong token", "口令不对")}
             if method == "GET" and parts == ["ping"]:
                 return 200, {"ok": True, "service": "jobhook", "api": API, "version": VERSION}
