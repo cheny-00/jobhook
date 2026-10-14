@@ -9,7 +9,6 @@ import threading
 import time
 import unittest
 from http.server import ThreadingHTTPServer
-from unittest import mock
 
 import jobhook
 
@@ -106,7 +105,7 @@ class Flow(JobhookTest):
         code, out = self.call("GET", "/ping", admin=False)
         self.assertEqual((code, out), (200, {"ok": True, "service": "jobhook", "api": 1, "version": jobhook.VERSION}))
 
-    def test_clients_from_before_the_rename_still_get_in(self):
+    def test_older_aca_remote_still_gets_in(self):
         self.assertEqual(self.call("GET", "/hooks", header="X-Adm-Token")[0], 200)
         self.assertEqual(self.call("GET", "/hooks", header="X-Something-Else")[0], 401)
 
@@ -215,22 +214,6 @@ class Channels(unittest.TestCase):
         self.assertEqual(got, [("done", "t", "b")])
         # nothing set up: nothing to do
         jobhook.Notifier([Off()]).send("done", "t", "b")
-
-
-class Setup(unittest.TestCase):
-    def test_settings_from_before_the_rename_still_count(self):
-        self.assertEqual(jobhook.setting({"ADM_HUB_TOKEN": "old", "JOBHOOK_TOKEN": "new"}, "TOKEN"), "new")
-        self.assertEqual(jobhook.setting({"ADM_HUB_TOKEN": "old"}, "TOKEN"), "old")
-        self.assertEqual(jobhook.setting({}, "LISTEN", "127.0.0.1:8431"), "127.0.0.1:8431")
-
-    def test_records_stay_where_an_older_server_kept_them(self):
-        with tempfile.TemporaryDirectory() as home, mock.patch.dict(os.environ, {"HOME": home}):
-            self.assertEqual(jobhook.data_dir({}), os.path.join(home, ".local/state/jobhook"))
-            os.makedirs(os.path.join(home, ".local/state/adm-hub"))
-            self.assertEqual(jobhook.data_dir({}), os.path.join(home, ".local/state/adm-hub"))
-            os.makedirs(os.path.join(home, ".local/state/jobhook"))
-            self.assertEqual(jobhook.data_dir({}), os.path.join(home, ".local/state/jobhook"))
-            self.assertEqual(jobhook.data_dir({"JOBHOOK_DIR": "/srv/jh"}), "/srv/jh")
 
 
 if __name__ == "__main__":

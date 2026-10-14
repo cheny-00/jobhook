@@ -170,15 +170,12 @@ id 是 16 到 64 个字符,只能用 `A-Z a-z 0-9 _ -`;至少要有 128 位随�
 - 登记、列出、取走、删除都需要管理口令,比较口令时用的是固定耗时的比较。
 - 服务日志里 id 只显示前 8 个字符。记录文件只有运行服务的用户能读。
 
-## 从 adm-hub 升级
-
-jobhook 以前叫 adm-hub。把 `adm_hub.py` 换成 `jobhook.py`、让服务指向新文件就行,其他都不用马上改。
-jobhook 仍然认 `ADM_HUB_TOKEN`、`ADM_HUB_LISTEN`、`ADM_HUB_DIR` 和 `X-Adm-Token` 请求头;
-如果记录在 `~/.local/state/adm-hub`、而 `~/.local/state/jobhook` 不存在,会继续用旧目录。
-方便的时候换成新名字;旧名字会在以后的版本里去掉。
-
 ## 测试
 
 ```sh
 python3 -m unittest test_jobhook.py
 ```
+
+## 许可证
+
+[MIT](LICENSE)

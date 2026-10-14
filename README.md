@@ -180,16 +180,12 @@ All through environment variables:
 - Registering, listing, collecting and deleting need the admin token. It is compared in constant time.
 - The server log shows only the first 8 characters of an id. Records are stored readable by the server's user only.
 
-## Upgrading from adm-hub
-
-jobhook used to be called adm-hub. Replace `adm_hub.py` with `jobhook.py` and point the service at it; nothing
-else has to change right away. jobhook still reads `ADM_HUB_TOKEN`, `ADM_HUB_LISTEN`, `ADM_HUB_DIR` and the
-`X-Adm-Token` header, and keeps using `~/.local/state/adm-hub` when that is where the records are and
-`~/.local/state/jobhook` doesn't exist. Switch to the new names when convenient; the old ones will be dropped in
-a later version.
-
 ## Tests
 
 ```sh
 python3 -m unittest test_jobhook.py
 ```
+
+## License
+
+[MIT](LICENSE)

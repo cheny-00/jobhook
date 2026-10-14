@@ -32,10 +32,6 @@ Environment:
   JOBHOOK_NOTIFY      shell command run for each notification; gets the title and body as $1 and $2,
                       and JOBHOOK_EVENT (done / failed / lost), JOBHOOK_TITLE, JOBHOOK_BODY in its environment
   BARK_URL BARK_KEY [BARK_USER BARK_PASS]   push to a Bark server; leave unset for no Bark
-
-Older versions were called adm-hub. For servers set up back then, this one still reads ADM_HUB_TOKEN,
-ADM_HUB_LISTEN, ADM_HUB_DIR and the X-Adm-Token header, and keeps using ~/.local/state/adm-hub if that is
-where the records are. These will go away in a later version.
 """
 
 import base64
@@ -345,6 +341,7 @@ def handler(app):
             body = self.body() if method in ("PUT", "POST") else b""
             if body is None:
                 return 413, {"error": app.t("body too long", "正文太长")}
+            # X-Adm-Token: what aca.remote before 0.3.1 sends; goes once those are gone
             admin = app.admin((self.headers.get("X-Jobhook-Token"), self.headers.get("X-Adm-Token")))
             denied = 401, {"error": app.t("wrong token", "口令不对")}
             if method == "GET" and parts == ["ping"]:
@@ -388,30 +385,17 @@ def handler(app):
     return H
 
 
-def setting(env, name, default=""):
-    """JOBHOOK_<name>, or ADM_HUB_<name> from before the rename"""
-    return env.get("JOBHOOK_" + name) or env.get("ADM_HUB_" + name) or default
-
-
-def data_dir(env):
-    given = setting(env, "DIR")
-    if given:
-        return given
-    new, old = (os.path.expanduser("~/.local/state/" + n) for n in ("jobhook", "adm-hub"))
-    return old if not os.path.exists(new) and os.path.isdir(old) else new
-
-
 def main():
     env = os.environ
-    token = setting(env, "TOKEN")
+    token = env.get("JOBHOOK_TOKEN") or ""
     if len(token) < 16:
         sys.exit("JOBHOOK_TOKEN is not set (16+ characters): openssl rand -hex 24")
-    host, _, port = setting(env, "LISTEN", "127.0.0.1:8431").rpartition(":")
+    host, _, port = (env.get("JOBHOOK_LISTEN") or "127.0.0.1:8431").rpartition(":")
     try:
         keep = int(env.get("JOBHOOK_KEEP_DAYS") or 30)
     except ValueError:
         sys.exit("JOBHOOK_KEEP_DAYS must be a whole number of days")
-    root = data_dir(env)
+    root = env.get("JOBHOOK_DIR") or os.path.expanduser("~/.local/state/jobhook")
     # records hold ids and log tails: readable by this user only
     os.umask(0o077)
     notify = Notifier([Bark(env), Command(env)])
